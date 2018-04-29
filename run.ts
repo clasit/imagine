@@ -7,29 +7,51 @@ const mongoose = require('mongoose');
 const assets = './images';
 
 
-// AUX 2
-class Metadata {
-    public static extract_from(file) {        
-        return sharp(`${assets}/${file}`)
-            .metadata()
-            .then((info) => { return info.exif ? exifReader(info.exif) : null }
-        );        
+
+/*
+ * Clase que se encarga de la persistencia de datos
+ */
+class Storer {
+    private data;
+    constructor(data: Promise<any>){
+        this.data = data;
+    }
+
+    public store_on() {        
+        this.data.then((info) => console.log(info));
+    }
+
+    // mongoose.connect('mongodb://localhost/my_database');
+}
+
+
+
+/*
+ * Clase que se encarga extraer los metadatos de un archivo
+ */
+class Extract {
+    public static metadata_from(file) {
+        const storer = new Storer(sharp(`${assets}/${file}`)
+                        .metadata()
+                        .then((info) => info.exif ? exifReader(info.exif) : null));
+        return storer;
     }
 }
 
 
-let metadata: any[];
 
-// MAIN
+/*
+ * MAIN
+ */
 file_system.readdirSync( assets )
 .filter( (file) => by_format(file,'.jpg') )
-.forEach( (file) => Metadata.extract_from(file).then((info) => console.log(info) ));
+.forEach( (file) => Extract.metadata_from(file).store_on() );
 
 
-// AUX 1
+
+/*
+ * Función auxiliar para el filtrado
+ */
 function by_format(file, format) {
     return file.endsWith(format);
 }
-
-
-// mongoose.connect('mongodb://localhost/my_database');
